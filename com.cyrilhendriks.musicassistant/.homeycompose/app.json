@@ -1,20 +1,16 @@
 {
   "id": "com.cyrilhendriks.musicassistant",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "compatibility": ">=12.4.0",
   "sdk": 3,
-  "platforms": [
-    "local"
-  ],
+  "platforms": ["local"],
   "name": {
     "en": "Music Assistant"
   },
   "description": {
     "en": "Adds support for Music Assistant via the json api"
   },
-  "category": [
-    "music"
-  ],
+  "category": ["music"],
   "permissions": [],
   "images": {
     "small": "/assets/images/small.png",
