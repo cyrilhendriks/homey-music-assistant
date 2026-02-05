@@ -1,0 +1,28 @@
+{
+  "id": "com.cyrilhendriks.musicassistant",
+  "version": "1.0.0",
+  "compatibility": ">=12.4.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Music Assistant"
+  },
+  "description": {
+    "en": "Adds support for Music Assistant via the json api"
+  },
+  "category": [
+    "music"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Cyril Hendriks",
+    "email": "cyril.hendriks@gmail.com"
+  }
+}
