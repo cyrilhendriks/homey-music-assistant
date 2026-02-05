@@ -1,0 +1,14 @@
+{
+  "name": "homey-music-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Homey app integration for Music Assistant",
+  "main": "src/app.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "node scripts/lint.js",
+    "test": "node --test"
+  }
+}

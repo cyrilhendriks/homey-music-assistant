@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Music Assistant Settings</title>
+    <style>
+      body { font-family: sans-serif; margin: 20px; }
+      .field { margin-bottom: 12px; }
+      label { display: block; font-weight: 600; margin-bottom: 4px; }
+      input { width: 100%; max-width: 420px; padding: 8px; }
+      button { margin-right: 8px; padding: 8px 12px; }
+      #status { margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Music Assistant</h1>
+
+    <div class="field">
+      <label for="ma_host">Host (verplicht)</label>
+      <input id="ma_host" type="text" placeholder="bijv. homeassistant.local" />
+    </div>
+
+    <div class="field">
+      <label for="ma_port">Port</label>
+      <input id="ma_port" type="number" min="1" max="65535" value="8095" />
+    </div>
+
+    <div class="field">
+      <label for="ma_api_key">API key (optioneel)</label>
+      <input id="ma_api_key" type="password" placeholder="Laat leeg als niet nodig" />
+    </div>
+
+    <button id="saveBtn">Opslaan</button>
+    <button id="testBtn">Test connection</button>
+
+    <div id="status"></div>
+
+    <script type="text/javascript">
+      function setStatus(message, isError = false) {
+        const status = document.getElementById('status');
+        status.style.color = isError ? '#b00020' : '#006400';
+        status.textContent = message;
+      }
+
+      async function loadSettings() {
+        const response = await Homey.api('GET', '/settings');
+        if (response.ok) {
+          document.getElementById('ma_host').value = response.settings.ma_host || '';
+          document.getElementById('ma_port').value = response.settings.ma_port || 8095;
+          document.getElementById('ma_api_key').value = response.settings.ma_api_key || '';
+        }
+      }
+
+      async function saveSettings() {
+        const payload = {
+          ma_host: document.getElementById('ma_host').value,
+          ma_port: Number(document.getElementById('ma_port').value),
+          ma_api_key: document.getElementById('ma_api_key').value
+        };
+
+        const response = await Homey.api('POST', '/settings', payload);
+        if (response.ok) {
+          setStatus('Instellingen opgeslagen.');
+          return;
+        }
+
+        setStatus(response.error || 'Opslaan mislukt.', true);
+      }
+
+      async function testConnection() {
+        setStatus('Verbinding testen...');
+        const response = await Homey.api('POST', '/test-connection', {});
+
+        if (response.ok) {
+          const version = response.details?.version ? ` (versie: ${response.details.version})` : '';
+          setStatus(`Verbonden met Music Assistant${version}.`);
+          return;
+        }
+
+        setStatus(response.error || 'Verbindingstest mislukt.', true);
+      }
+
+      document.getElementById('saveBtn').addEventListener('click', saveSettings);
+      document.getElementById('testBtn').addEventListener('click', testConnection);
+
+      Homey.ready();
+      loadSettings().catch((error) => setStatus(error.message, true));
+    </script>
+  </body>
+</html>

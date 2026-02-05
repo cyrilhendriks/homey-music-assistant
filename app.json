@@ -1,0 +1,24 @@
+{
+  "id": "com.example.musicassistant",
+  "version": "0.1.0",
+  "compatibility": ">=10.0.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Music Assistant"
+  },
+  "description": {
+    "en": "Control Music Assistant from Homey"
+  },
+  "category": [
+    "music"
+  ],
+  "author": {
+    "name": "homey-music-assistant"
+  },
+  "api": {
+    "baseUrl": "/"
+  }
+}
