@@ -8,6 +8,12 @@
     "node": ">=20"
   },
   "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "eslint": "^9.20.1",
+    "prettier": "^3.5.0"
   }
 }

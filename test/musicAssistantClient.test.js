@@ -12,6 +12,8 @@ const {
 test('searchTracks returns empty array for short query', async () => {
   const client = new MusicAssistantClient({
     host: 'localhost',
+    port: 8095,
+    token: 'test-token',
     fetchImpl: async () => {
       throw new Error('should not be called');
     }
@@ -24,13 +26,17 @@ test('searchTracks returns empty array for short query', async () => {
 test('getPlayers performs GET request', async () => {
   let requestedUrl;
   let requestedMethod;
+  let requestedBody;
 
   const client = new MusicAssistantClient({
     host: 'localhost',
+    port: 8095,
+    token: 'test-token',
     fetchImpl: async (url, options) => {
       requestedUrl = url;
       requestedMethod = options.method;
-      return new Response(JSON.stringify([{ id: 'player-1' }]), {
+      requestedBody = options.body;
+      return new Response(JSON.stringify([{ player_id: 'player-1' }]), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -38,13 +44,19 @@ test('getPlayers performs GET request', async () => {
   });
 
   const result = await client.getPlayers();
-  assert.equal(requestedUrl, 'http://localhost:8095/api/players');
-  assert.equal(requestedMethod, 'GET');
-  assert.equal(result[0].id, 'player-1');
+  assert.equal(requestedUrl, 'http://localhost:8095/api');
+  assert.equal(requestedMethod, 'POST');
+  assert.equal(requestedBody, JSON.stringify({ command: 'players/all', args: {} }));
+  assert.equal(result[0].player_id, 'player-1');
 });
 
 test('playMedia validates required arguments', async () => {
-  const client = new MusicAssistantClient({ host: 'localhost', fetchImpl: async () => new Response('{}') });
+  const client = new MusicAssistantClient({
+    host: 'localhost',
+    port: 8095,
+    token: 'test-token',
+    fetchImpl: async () => new Response('{}')
+  });
 
   await assert.rejects(() => client.playMedia({}, { uri: 'x' }), MusicAssistantError);
   await assert.rejects(() => client.playMedia({ id: 'p1' }, {}), MusicAssistantError);
@@ -53,6 +65,8 @@ test('playMedia validates required arguments', async () => {
 test('throws MusicAssistantHttpError for non-2xx responses', async () => {
   const client = new MusicAssistantClient({
     host: 'localhost',
+    port: 8095,
+    token: 'test-token',
     fetchImpl: async () => new Response('nope', { status: 500 })
   });
 
