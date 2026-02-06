@@ -6,19 +6,30 @@ const { Logger } = require('./lib/logger');
 
 class MusicAssistantApp extends Homey.App {
   async onInit() {
-    const logger = new Logger('MusicAssistantApp');
+    this.logger = new Logger('MusicAssistantApp');
+    this.logger.info('Music Assistant app initialized');
+  }
 
-    const host = this.homey.settings.get('ma_host');
-    const port = this.homey.settings.get('ma_port') || 8095;
-    const apiKey = this.homey.settings.get('ma_api_key');
+  /**
+   * Read Music Assistant connection settings.
+   * We do NOT fail app startup if settings are missing;
+   * flows/settings UI should guide the user.
+   */
+  getMusicAssistantConfig() {
+    return {
+      host: (this.homey.settings.get('ma_host') || '').trim(),
+      port: Number(this.homey.settings.get('ma_port') || 8095),
+      token: (this.homey.settings.get('ma_token') || '').trim()
+    };
+  }
 
-    if (!host) {
-      logger.warn('Music Assistant host is not configured yet');
-      return;
-    }
-
-    this.musicAssistantClient = new MusicAssistantClient({ host, port, apiKey, logger });
-    logger.info('Music Assistant app initialized');
+  /**
+   * Create a MA client from the current settings.
+   * Throws a clear error if host/port invalid.
+   */
+  createMusicAssistantClient() {
+    const { host, port, token } = this.getMusicAssistantConfig();
+    return new MusicAssistantClient({ host, port, token, logger: this.logger });
   }
 }
 
