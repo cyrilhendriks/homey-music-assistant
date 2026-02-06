@@ -32,22 +32,30 @@ class MusicAssistantHttpError extends MusicAssistantError {
  * - Auth: Authorization: Bearer <token>
  */
 class MusicAssistantClient {
-  constructor({ host, port = 8095, token, timeoutMs = 8000, fetchImpl = fetch, logger } = {}) {
-    const sanitizedHost = String(host ?? '').trim();
-    const sanitizedPort = Number(port);
+  constructor({ host, port = 8095, token, timeoutMs = 8000, fetchImpl, logger } = {}) {
+    const rawHost = String(host ?? '').trim();
+    const rawPort = Number(port);
 
-    if (!sanitizedHost) {
-      throw new MusicAssistantError('Music Assistant host ontbreekt (ma_host).');
+    const normalized = this.#normalizeHostAndPort(rawHost, rawPort);
+
+    if (!normalized.host) {
+      throw new MusicAssistantError('Music Assistant host is missing (ma_host).');
     }
 
-    if (!Number.isInteger(sanitizedPort) || sanitizedPort < 1 || sanitizedPort > 65535) {
-      throw new MusicAssistantError('Music Assistant port is ongeldig (ma_port).');
+    if (!Number.isInteger(normalized.port) || normalized.port < 1 || normalized.port > 65535) {
+      throw new MusicAssistantError('Music Assistant port is invalid (ma_port).');
     }
 
-    this.baseUrl = `http://${sanitizedHost}:${sanitizedPort}`;
+    this.fetchImpl = fetchImpl ?? globalThis.fetch;
+    if (!this.fetchImpl) {
+      throw new MusicAssistantError(
+        'No fetch implementation available. Provide fetchImpl when constructing MusicAssistantClient.'
+      );
+    }
+
+    this.baseUrl = `${normalized.protocol}://${normalized.host}:${normalized.port}`;
     this.token = String(token ?? '').trim();
     this.timeoutMs = timeoutMs;
-    this.fetchImpl = fetchImpl;
     this.logger = logger;
   }
 
@@ -63,11 +71,11 @@ class MusicAssistantClient {
    */
   async call(command, args = {}, { requireAuth = true } = {}) {
     if (!command || typeof command !== 'string') {
-      throw new MusicAssistantError('Music Assistant command is verplicht.');
+      throw new MusicAssistantError('Music Assistant command is required.');
     }
 
     if (requireAuth && !this.token) {
-      throw new MusicAssistantError('Bearer token ontbreekt (ma_token).');
+      throw new MusicAssistantError('Music Assistant token is missing (ma_token).');
     }
 
     return this.#request('/api', {
@@ -75,8 +83,8 @@ class MusicAssistantClient {
       auth: requireAuth,
       body: {
         command,
-        args
-      }
+        args,
+      },
     });
   }
 
@@ -91,7 +99,7 @@ class MusicAssistantClient {
     let auth = {
       attempted: Boolean(this.token),
       ok: null,
-      error: null
+      error: null,
     };
 
     if (this.token) {
@@ -107,7 +115,7 @@ class MusicAssistantClient {
     return {
       reachable: true,
       info,
-      auth
+      auth,
     };
   }
 
@@ -126,31 +134,35 @@ class MusicAssistantClient {
    */
   async playMedia(target, media) {
     if (!target?.id) {
-      throw new MusicAssistantError('playMedia vereist target.id (queue_id).');
+      throw new MusicAssistantError('playMedia requires target.id (queue_id).');
     }
 
     const uri = media?.uri || media?.id;
     if (!uri || typeof uri !== 'string') {
-      throw new MusicAssistantError('playMedia vereist media.uri (bijv. "library://track/456").');
+      throw new MusicAssistantError(
+        'playMedia requires media.uri (for example "library://track/456").'
+      );
     }
 
     return this.call('player_queues/play_media', {
       queue_id: target.id,
-      media: [uri]
+      media: [uri],
     });
   }
 
   // The following methods depend on specific MA commands. We will implement them later using the Commands Reference.
   async getGroups() {
-    throw new MusicAssistantError('getGroups is nog niet geïmplementeerd voor de MA 2.7.x RPC API.');
+    throw new MusicAssistantError('getGroups is not implemented yet for the MA 2.7.x RPC API.');
   }
 
   async getRadioStations() {
-    throw new MusicAssistantError('getRadioStations is nog niet geïmplementeerd voor de MA 2.7.x RPC API.');
+    throw new MusicAssistantError(
+      'getRadioStations is not implemented yet for the MA 2.7.x RPC API.'
+    );
   }
 
   async getPlaylists() {
-    throw new MusicAssistantError('getPlaylists is nog niet geïmplementeerd voor de MA 2.7.x RPC API.');
+    throw new MusicAssistantError('getPlaylists is not implemented yet for the MA 2.7.x RPC API.');
   }
 
   async searchTracks(query) {
@@ -159,7 +171,7 @@ class MusicAssistantClient {
       return [];
     }
 
-    throw new MusicAssistantError('searchTracks is nog niet geïmplementeerd voor de MA 2.7.x RPC API.');
+    throw new MusicAssistantError('searchTracks is not implemented yet for the MA 2.7.x RPC API.');
   }
 
   async announce(targets, message, options = {}) {
@@ -167,14 +179,50 @@ class MusicAssistantClient {
     void options;
 
     if (!Array.isArray(targets) || targets.length === 0) {
-      throw new MusicAssistantError('announce vereist minstens 1 target.');
+      throw new MusicAssistantError('announce requires at least 1 target.');
     }
 
     if (!message || !message.trim()) {
-      throw new MusicAssistantError('announce vereist een niet-lege message.');
+      throw new MusicAssistantError('announce requires a non-empty message.');
     }
 
-    throw new MusicAssistantError('announce is nog niet geïmplementeerd voor de MA 2.7.x RPC API.');
+    throw new MusicAssistantError('announce is not implemented yet for the MA 2.7.x RPC API.');
+  }
+
+  #normalizeHostAndPort(host, port) {
+    let protocol = 'http';
+    let h = host;
+
+    // Allow users to paste a full URL like https://homeassistant.local:8095/
+    if (h.toLowerCase().startsWith('http://')) {
+      protocol = 'http';
+      h = h.slice('http://'.length);
+    } else if (h.toLowerCase().startsWith('https://')) {
+      protocol = 'https';
+      h = h.slice('https://'.length);
+    }
+
+    // Remove any path/query fragments and trailing slashes
+    h = h.split('/')[0].trim();
+
+    // If the host includes a port (host:1234), optionally use it.
+    // We only take the host-specified port when the explicit port argument is the default 8095.
+    const match = h.match(/^(.*):(\d{1,5})$/);
+    if (match) {
+      const extractedHost = match[1];
+      const extractedPort = Number(match[2]);
+      h = extractedHost;
+
+      if (port === 8095 && Number.isInteger(extractedPort)) {
+        port = extractedPort;
+      }
+    }
+
+    return {
+      protocol,
+      host: h,
+      port,
+    };
   }
 
   async #request(path, options = {}) {
@@ -183,20 +231,22 @@ class MusicAssistantClient {
 
     try {
       const headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       };
 
-      if (options.auth !== false) {
-        if (this.token) {
-          headers.Authorization = `Bearer ${this.token}`;
-        }
+      if (options.auth === true && !this.token) {
+        throw new MusicAssistantError('Music Assistant token is missing (ma_token).');
+      }
+
+      if (options.auth !== false && this.token) {
+        headers.Authorization = `Bearer ${this.token}`;
       }
 
       const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
         method: options.method ?? 'GET',
         headers,
         body: options.body ? JSON.stringify(options.body) : undefined,
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       const text = await response.text();
@@ -205,13 +255,17 @@ class MusicAssistantClient {
         this.logger?.warn?.('Music Assistant request failed', {
           path,
           status: response.status,
-          body: text
+          body: text,
         });
 
-        throw new MusicAssistantHttpError(`Music Assistant request failed: ${response.status}`, response.status, {
-          path,
-          responseBody: text
-        });
+        throw new MusicAssistantHttpError(
+          `Music Assistant request failed: ${response.status}`,
+          response.status,
+          {
+            path,
+            responseBody: text,
+          }
+        );
       }
 
       if (!text) {
@@ -223,7 +277,7 @@ class MusicAssistantClient {
       if (error?.name === 'AbortError') {
         throw new MusicAssistantTimeoutError('Music Assistant request timed out', {
           path,
-          timeoutMs: this.timeoutMs
+          timeoutMs: this.timeoutMs,
         });
       }
 
@@ -233,7 +287,7 @@ class MusicAssistantClient {
 
       throw new MusicAssistantError('Music Assistant request failed', {
         path,
-        cause: error?.message
+        cause: error?.message,
       });
     } finally {
       clearTimeout(timeout);
@@ -245,5 +299,5 @@ module.exports = {
   MusicAssistantClient,
   MusicAssistantError,
   MusicAssistantHttpError,
-  MusicAssistantTimeoutError
+  MusicAssistantTimeoutError,
 };

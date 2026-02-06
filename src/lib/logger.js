@@ -1,8 +1,9 @@
 'use strict';
 
 class Logger {
-  constructor(prefix = 'MusicAssistantApp') {
+  constructor(prefix = 'MusicAssistantApp', homeyLogger) {
     this.prefix = prefix;
+    this.homeyLogger = homeyLogger;
   }
 
   info(message, meta) {
@@ -24,9 +25,20 @@ class Logger {
   #log(level, message, meta) {
     const timestamp = new Date().toISOString();
     const details = meta ? ` ${JSON.stringify(meta)}` : '';
-    // Homey-compatible fallback logger.
-    // In Homey runtime, this can be replaced by this.homey.log/error wrappers.
-    console.log(`[${timestamp}] [${this.prefix}] [${level}] ${message}${details}`);
+    if (this.homeyLogger) {
+      if (level === 'ERROR' && typeof this.homeyLogger.error === 'function') {
+        this.homeyLogger.error(`[${timestamp}] [${this.prefix}] [${level}] ${message}${details}`);
+      } else if (
+        ['INFO', 'WARN', 'DEBUG'].includes(level) &&
+        typeof this.homeyLogger.log === 'function'
+      ) {
+        this.homeyLogger.log(`[${timestamp}] [${this.prefix}] [${level}] ${message}${details}`);
+      } else {
+        console.log(`[${timestamp}] [${this.prefix}] [${level}] ${message}${details}`);
+      }
+    } else {
+      console.log(`[${timestamp}] [${this.prefix}] [${level}] ${message}${details}`);
+    }
   }
 }
 
