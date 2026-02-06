@@ -16,11 +16,19 @@ class MusicAssistantApp extends Homey.App {
    * flows/settings UI should guide the user.
    */
   getMusicAssistantConfig() {
-    return {
-      host: (this.homey.settings.get('ma_host') || '').trim(),
-      port: Number(this.homey.settings.get('ma_port') || 8095),
-      token: (this.homey.settings.get('ma_token') || '').trim()
-    };
+    const host = (this.homey.settings.get('ma_host') || '').trim();
+    const port = Number(this.homey.settings.get('ma_port') || 8095);
+    const token = (this.homey.settings.get('ma_token') || '').trim();
+
+    const baseUrl = host ? `http://${host}:${port}` : undefined;
+
+    this.logger.debug('Music Assistant settings loaded', {
+      baseUrl,
+      port,
+      tokenConfigured: Boolean(token),
+    });
+
+    return { host, port, token, baseUrl };
   }
 
   /**

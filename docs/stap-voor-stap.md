@@ -1,25 +1,29 @@
-# Stap-voor-stap: Homey Music Assistant project opzetten (lokaal + GitHub)
+# Step-by-step: set up the Homey Music Assistant project (local + GitHub)
 
-Deze handleiding is geschreven voor beginners. Per stap leg ik uit **wat** je doet en **waarom**.
+This guide is written for beginners. Each step explains what you do and why.
 
 ---
 
-## Stap 1 — Installeer de basissoftware
+## Step 1 - Install the basics
 
-### Wat doen we?
-Installeer:
-- **Node.js 20 (LTS)**
-- **Git**
-- **VS Code** (of andere editor)
-- **Homey CLI**
+### What
 
-### Waarom?
-- Node.js draait je app en tooling.
-- Git bewaart versiegeschiedenis.
-- Een editor maakt ontwikkelen makkelijker.
-- Homey CLI is nodig om Homey apps lokaal te runnen/testen.
+Install:
 
-### Commando’s
+- Node.js 20 (LTS)
+- Git
+- VS Code (or another editor)
+- Homey CLI
+
+### Why
+
+- Node.js runs your app and tooling.
+- Git keeps version history.
+- An editor makes development easier.
+- Homey CLI is needed to run/test Homey apps locally.
+
+### Commands
+
 ```bash
 node -v
 git --version
@@ -27,34 +31,39 @@ npm i -g homey
 homey --version
 ```
 
-> Verwacht: Node-versie rond v20.x en een Homey CLI versie-output.
+Expected: a Node version around v20.x and a Homey CLI version output.
 
 ---
 
-## Stap 2 — Maak een GitHub repository
+## Step 2 - Create a GitHub repository
 
-### Wat doen we?
-Op GitHub maak je een nieuw repository aan, bijvoorbeeld:
+### What
+
+On GitHub, create a new repository, for example:
 `homey-music-assistant`
 
-### Waarom?
-GitHub is je centrale back-up, samenwerking en basis voor CI/CD.
+### Why
 
-### Instellingen (aanbevolen)
-- Visibility: **Private** (later kun je naar Public)
-- **README toevoegen uitzetten** (we doen lokaal een eerste commit)
-- **.gitignore uitzetten** (maken we lokaal)
-- **License uitzetten** (voegen we lokaal toe, bijv. MIT)
+GitHub is your central backup, collaboration, and CI/CD base.
+
+### Recommended settings
+
+- Visibility: Private (you can switch to Public later)
+- Disable Add a README (we will commit locally first)
+- Disable .gitignore (we create it locally)
+- Disable License (we add it locally, for example MIT)
 
 ---
 
-## Stap 3 — Maak lokaal projectmap en initialiseer Git
+## Step 3 - Create a local project folder and initialize Git
 
-### Wat doen we?
-Maak een map en initieer git.
+### What
 
-### Waarom?
-Je start met een schone, controleerbare basis.
+Create a folder and initialize git.
+
+### Why
+
+You start with a clean, controlled base.
 
 ```bash
 mkdir homey-music-assistant
@@ -64,39 +73,45 @@ git init
 
 ---
 
-## Stap 4 — Bootstrap de Homey app basis
+## Step 4 - Bootstrap the Homey app
 
-### Wat doen we?
-Genereer een Homey app skeleton.
+### What
 
-### Waarom?
-Dit maakt direct de juiste SDK v3 basisstructuur.
+Generate a Homey app skeleton.
+
+### Why
+
+This gives you the correct SDK v3 structure immediately.
 
 ```bash
 homey app create
 ```
 
-Kies tijdens de wizard:
-- SDK: **v3**
+Choose during the wizard:
+
+- SDK: v3
 - JavaScript
-- App-id (bijv. `com.jouwnaam.musicassistant`)
-- App-naam: `Music Assistant`
+- App id (for example `com.yourname.musicassistant`)
+- App name: `Music Assistant`
 
 ---
 
-## Stap 5 — Basis projectstructuur uitbreiden
+## Step 5 - Extend the project structure
 
-### Wat doen we?
-Maak de mappen die je later nodig hebt.
+### What
 
-### Waarom?
-Een nette structuur voorkomt chaos zodra de app groeit.
+Create the folders you will need later.
+
+### Why
+
+A clean structure prevents chaos as the app grows.
 
 ```bash
 mkdir -p src/lib src/flow/actions docs .github/workflows .github/ISSUE_TEMPLATE assets locales
 ```
 
-Voeg kernbestanden toe:
+Add core files:
+
 - `README.md`
 - `CHANGELOG.md`
 - `LICENSE` (MIT)
@@ -105,18 +120,20 @@ Voeg kernbestanden toe:
 
 ---
 
-## Stap 6 — Koppel lokaal repo aan GitHub
+## Step 6 - Connect the local repo to GitHub
 
-### Wat doen we?
-Voeg remote toe en push.
+### What
 
-### Waarom?
-Nu staat je lokale werk veilig op GitHub.
+Add the remote and push.
+
+### Why
+
+Your local work is now backed up on GitHub.
 
 ```bash
-git remote add origin git@github.com:<jouw-account>/homey-music-assistant.git
-# of HTTPS:
-# git remote add origin https://github.com/<jouw-account>/homey-music-assistant.git
+git remote add origin git@github.com:<your-account>/homey-music-assistant.git
+# or HTTPS:
+# git remote add origin https://github.com/<your-account>/homey-music-assistant.git
 
 git branch -M main
 git add .
@@ -126,25 +143,27 @@ git push -u origin main
 
 ---
 
-## Stap 7 — Zet codekwaliteit direct aan
+## Step 7 - Enable code quality from day one
 
-### Wat doen we?
-Voeg ESLint + Prettier toe.
+### What
 
-### Waarom?
-Consistente stijl en minder fouten vanaf dag 1.
+Add ESLint.
+
+### Why
+
+Consistent style and fewer mistakes from day 1.
 
 ```bash
-npm i -D eslint prettier eslint-config-prettier
+npm i -D eslint
 npx eslint --init
 ```
 
-Minimale scripts in `package.json`:
+Minimal scripts in `package.json`:
+
 ```json
 {
   "scripts": {
     "lint": "eslint .",
-    "format": "prettier --write .",
     "test": "node --test"
   }
 }
@@ -152,15 +171,18 @@ Minimale scripts in `package.json`:
 
 ---
 
-## Stap 8 — Voeg CI toe via GitHub Actions
+## Step 8 - Add CI via GitHub Actions
 
-### Wat doen we?
-Maak workflow `.github/workflows/ci.yml`.
+### What
 
-### Waarom?
-Elke push/check draait automatisch lint + test.
+Create workflow `.github/workflows/ci.yml`.
 
-Minimale CI:
+### Why
+
+Every push/check automatically runs lint and tests.
+
+Minimal CI:
+
 ```yaml
 name: CI
 on: [push, pull_request]
@@ -179,10 +201,12 @@ jobs:
 
 ---
 
-## Stap 9 — Start met Music Assistant client (MVP)
+## Step 9 - Start the Music Assistant client (MVP)
 
-### Wat doen we?
-Maak `src/lib/musicAssistantClient.js` met methodes:
+### What
+
+Create `src/lib/musicAssistantClient.js` with methods:
+
 - `getPlayers()`
 - `getGroups()`
 - `getRadioStations()`
@@ -191,36 +215,57 @@ Maak `src/lib/musicAssistantClient.js` met methodes:
 - `playMedia(target, media)`
 - `announce(targets, message, options)`
 
-### Waarom?
-Eén centrale API-client houdt je app onderhoudbaar en testbaar.
+### Why
+
+One central API client keeps your app maintainable and testable.
 
 ---
 
-## Stap 10 — Bouw daarna pas de Flow cards
+## Step 10 - Build Flow cards after the client
 
-### Wat doen we?
-Maak action cards met dropdown/autocomplete.
+### What
 
-### Waarom?
-Eerst backend stabiel, daarna UX erbovenop. Dat werkt sneller en betrouwbaarder.
+Create action cards with dropdown/autocomplete.
+
+### Why
+
+Stabilize the backend first, then build UX on top. That is faster and more reliable.
 
 ---
 
-## Handige werkvolgorde per feature
+## Music Assistant settings
 
-1. Kleine taak kiezen (bijv. `getPlayers`).
-2. Code schrijven.
-3. Lint/test draaien.
-4. Commit met Conventional Commit.
-5. Push en PR.
+- `ma_host`: required, the Music Assistant host (IP/hostname).
+- `ma_port`: optional, default is 8095 (this is commonly the default MA port).
+- `ma_token`: required bearer token (long-lived recommended).
 
-Voorbeeld commit messages:
+### Create a long-lived bearer token
+
+1. Settings
+2. Users
+3. Dropdown menu on the user tile (three dots)
+4. Access tokens
+5. New token
+6. Copy the token and paste it into `ma_token` in Homey
+
+Security note: keep the token secret.
+
+---
+
+## Handy feature workflow
+
+1. Pick a small task (for example `getPlayers`).
+2. Write code.
+3. Run lint/tests.
+4. Commit with Conventional Commit.
+5. Push and open a PR.
+
+Example commit messages:
+
 - `feat(flow): add play radio station action card`
 - `feat(client): add searchTracks with timeout handling`
 - `docs: document MA API assumptions`
 
 ---
 
-## Als je wilt, doen we hierna direct stap 1 t/m 4 samen
-
-Dan begeleid ik je command-voor-command met controles (wat je moet zien, en wat te doen bij errors).
+If you want, we can go through steps 1 to 4 together next.
