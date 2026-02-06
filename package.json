@@ -7,7 +7,9 @@
   "engines": {
     "node": ">=20"
   },
-  "scripts": {
-    "test": "node --test"
-  }
+"scripts": {
+  "lint": "eslint .",
+  "format": "prettier --write .",
+  "test": "node --test"
+}
 }
